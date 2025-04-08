@@ -1,0 +1,48 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import LabelEncoder
+from sklearn.metrics import accuracy_score
+
+# Load your IPL dataset (CSV format)
+# You can use a public dataset like: https://www.kaggle.com/datasets/patrickb1912/ipl-complete-dataset-2008-2020
+df = pd.read_csv("IPL_Matches_2008_2020.csv")
+
+# Basic preprocessing
+df = df[['team1', 'team2', 'toss_winner', 'toss_decision', 'winner']]
+df = df.dropna()
+
+# Encoding categorical data
+le = LabelEncoder()
+for column in df.columns:
+    df[column] = le.fit_transform(df[column])
+
+# Features & Labels
+X = df[['team1', 'team2', 'toss_winner', 'toss_decision']]
+y = df['winner']
+
+# Train-test split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Model
+model = LogisticRegression()
+model.fit(X_train, y_train)
+
+# Accuracy
+y_pred = model.predict(X_test)
+print(f"Accuracy: {accuracy_score(y_test, y_pred)*100:.2f}%")
+
+# 🧪 Predict a match
+def predict_winner(team1, team2, toss_winner, toss_decision):
+    # Encode user inputs
+    inputs = pd.DataFrame([[team1, team2, toss_winner, toss_decision]],
+                          columns=['team1', 'team2', 'toss_winner', 'toss_decision'])
+    for col in inputs.columns:
+        inputs[col] = le.transform(inputs[col])
+    
+    prediction = model.predict(inputs)
+    winner = le.inverse_transform(prediction)
+    return winner[0]
+
+# Example use
+print("Predicted winner:", predict_winner('Mumbai Indians', 'Chennai Super Kings', 'Mumbai Indians', 'bat'))
